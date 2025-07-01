@@ -9,7 +9,7 @@
 
 struct Index {
   @State message: string = 'Hello World';
-  private gridData: number[] = [
+  private gridDataone: number[] = [
     5, 3, 0, 0, 7, 0, 0, 0, 0,
     6, 0, 0, 1, 9, 5, 0, 0, 0,
     0, 9, 8, 0, 0, 0, 0, 6, 0,
@@ -20,7 +20,20 @@ struct Index {
     0, 0, 0, 4, 1, 9, 0, 0, 5,
     0, 0, 0, 0, 8, 0, 0, 7, 9
   ];
-  private numbers: string[] = ['1','2','3','4','5','6','7','8','9'];
+  @State private gridData: number[] = [
+    5, 3, 0, 0, 7, 0, 0, 0, 0,
+    6, 0, 0, 1, 9, 5, 0, 0, 0,
+    0, 9, 8, 0, 0, 0, 0, 6, 0,
+    8, 0, 0, 0, 6, 0, 0, 0, 3,
+    4, 0, 0, 8, 0, 3, 0, 0, 1,
+    7, 0, 0, 0, 2, 0, 0, 0, 6,
+    0, 6, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 4, 1, 9, 0, 0, 5,
+    0, 0, 0, 0, 8, 0, 0, 7, 9
+  ];
+  private numbers: number[] = [1,2,3,4,5,6,7,8,9];
+  @State selectedIndex: number = -1;
+  @State selectedNumber: number = -1;
   // aboutToAppear() {
   //   // 在生命周期中填充数组
   //   for (let i = 0; i < 81; i++) {
@@ -41,11 +54,19 @@ struct Index {
       Grid() {
         ForEach(this.gridData, (item: number, index: number) => {
           GridItem() {
-            Text(item.toString())
+            Text(this.getBlockText(item,index))
               .fontSize(16)
+              .fontColor(this.getBlockTextColor(index))
               .textAlign(TextAlign.Center)
           }
           .backgroundColor(this.getBlockColor(index))
+          .onClick(() => {
+            if (this.gridDataone[index] === 0) { // 仅当item非0时响应点击
+              this.selectedNumber=item;
+              this.selectedIndex = index; // 更新选中索引
+              this.gridData[this.selectedIndex]=this.selectedNumber;
+            }
+          })
           .border({
             width:1,
             color: {
@@ -71,14 +92,18 @@ struct Index {
       })
       Grid() {
         // 前3x3数字按钮（1~9）
-        ForEach(this.numbers, (item: string) => {
+        ForEach(this.numbers, (item: number) => {
           GridItem() {
-            Button(item)
+            Button(item.toString())
               .width('90%')
               .height('90%')
               .fontSize(20)
               .backgroundColor("#FFbbbbbb")
               .fontColor("#FFFFFFFF")
+              .onClick(() => {
+                  this.selectedNumber = item; // 更新选中数值
+                  this.gridData[this.selectedIndex]=this.selectedNumber;
+                })
           }
         })
 
@@ -110,6 +135,17 @@ struct Index {
     // .backgroundColor('#FFaaFFFF')
   }
 
+  getBlockText(item: number,index:number): string {
+    if (this.selectedIndex === index) {
+      item=this.selectedNumber;
+      return item>0 ? item.toString(): " ";
+    }else if (item===0||item===-1){
+      return " ";
+    }else{
+      return item.toString();
+    }
+  }
+
   getBlockColor(index: number): string {
     const row=Math.floor((index) / 9);
     const col = (index) % 9;
@@ -117,9 +153,16 @@ struct Index {
     const ccol=Math.floor(col/3);
     console.log(row+" "+col+";"+crow+" "+ccol);
     if (crow==ccol||crow+ccol==2) {
-      return'#FFF5F5F5';
+      return (this.selectedIndex === index) ? '#FFca7731':'#FFF5F5F5';
     }else {
-      return '#FFFFbbFF';
+      return (this.selectedIndex === index) ? '#FFca7731': '#FFFFbbFF';
+    }
+  }
+  getBlockTextColor(index:number):string{
+    if (this.gridDataone[index]===0) {
+      return "#FF6666ff"
+    }else {
+      return "#FF000000"
     }
   }
 }
