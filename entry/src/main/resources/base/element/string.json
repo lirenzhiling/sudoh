@@ -11,6 +11,22 @@
     {
       "name": "EntryAbility_label",
       "value": "label"
+    },
+    {
+      "name": "MainAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "MainAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "HomeAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "HomeAbility_label",
+      "value": "label"
     }
   ]
 }

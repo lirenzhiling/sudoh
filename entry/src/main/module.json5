@@ -3,7 +3,7 @@
     "name": "entry",
     "type": "entry",
     "description": "$string:module_desc",
-    "mainElement": "EntryAbility",
+    "mainElement": "HomeAbility",
     "deviceTypes": [
       "phone",
       "tablet",
@@ -15,6 +15,20 @@
     "pages": "$profile:main_pages",
     "abilities": [
       {
+        "name": "HomeAbility",
+        "srcEntry": "./ets/homeability/HomeAbility.ets",
+        "description": "$string:HomeAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:HomeAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [{
+          "entities": ["entity.system.home"],
+          "actions": ["action.system.home"]
+        }]
+      },
+      {
         "name": "EntryAbility",
         "srcEntry": "./ets/entryability/EntryAbility.ets",
         "description": "$string:EntryAbility_desc",
@@ -22,18 +36,8 @@
         "label": "$string:EntryAbility_label",
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
-        "exported": true,
-        "skills": [
-          {
-            "entities": [
-              "entity.system.home"
-            ],
-            "actions": [
-              "action.system.home"
-            ]
-          }
-        ]
-      }
+
+      },
     ],
     "extensionAbilities": [
       {

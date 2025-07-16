@@ -1,23 +1,12 @@
-import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
-// import PersistentStorage from '@ohos.data.storage';
-
-import emitter from '@ohos.events.emitter';
 
 const DOMAIN = 0x0000;
 
-export default class EntryAbility extends UIAbility {
+export default class HomeAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
-    this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
-
-    // 通过 EventHub 发送计时启动事件
-    this.context.eventHub.emit('startTimer', { action: 'start' });
-
-    // 发送端
-    AppStorage.setOrCreate('timerStatus', 'start');
-
   }
 
   onDestroy(): void {
@@ -28,16 +17,13 @@ export default class EntryAbility extends UIAbility {
     // Main window is created, set main page for this ability
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
-    windowStage.loadContent('pages/Sudoku', (err) => {
+    windowStage.loadContent('pages/Home', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;
       }
-
-
+      hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
     });
-
-
   }
 
   onWindowStageDestroy(): void {
@@ -53,6 +39,5 @@ export default class EntryAbility extends UIAbility {
   onBackground(): void {
     // Ability has back to background
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onBackground');
-      PersistentStorage.persistProp('shouldShowDialog', true);
   }
 }

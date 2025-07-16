@@ -1,14 +1,26 @@
+import { common } from '@kit.AbilityKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import promptAction from '@ohos.promptAction';
+import Want from '@ohos.app.ability.Want';
+
+
+
+
+
 @Styles function pageStyle() {
   .width('100%')
   .padding(0)
   .margin({top:-40,bottom:-40})
 }
-
+interface TimerEventData {
+  action: 'start' | 'stop' | 'reset'; // 联合类型限定可能的操作
+}
 @Entry
 @Component
 
-struct Index {
-  @State message: string = 'Hello World';
+struct Sudoku {
+  private context = getContext(this) as common.UIAbilityContext;
+
   private gridDataone: number[] = [
     5, 3, 0, 0, 7, 0, 0, 0, 0,
     6, 0, 0, 1, 9, 5, 0, 0, 0,
@@ -34,6 +46,18 @@ struct Index {
   private numbers: number[] = [1,2,3,4,5,6,7,8,9];
   @State selectedIndex: number = -1;
   @State selectedNumber: number = -1;
+  // 声明计时器控制器
+  textTimerController: TextTimerController = new TextTimerController();
+
+  //暂停与继续
+  @State bgImage: string = 'img/play.png';
+
+  // 接收端
+  @StorageLink('timerStatus') timerStatus: string = '';
+  @State showConfirmDialog: boolean = false; // 控制弹窗显隐
+
+
+
   // aboutToAppear() {
   //   // 在生命周期中填充数组
   //   for (let i = 0; i < 81; i++) {
@@ -41,15 +65,117 @@ struct Index {
   //   }
   // }
 
+  onPageShow() {
+    // 从全局状态获取计时器状态
+    // this.isTimerRunning = globalThis.timerStatus?.isRunning ?? false;
+    // if (this.isTimerRunning) {
+    //   this.textTimerController.start();
+    // } else {
+    //   this.textTimerController.pause();
+    // }
+
+    const shouldShow: boolean = AppStorage.get<boolean>('shouldShowDialog') || false; // 默认false
+    if (shouldShow) {
+      this.showConfirmDialog = true; // 点击后显示弹窗
+      this.timerStatus = 'pause';
+      this.textTimerController.pause();
+      this.bgImage = 'img/stop.png';
+      // Dialog弹窗
+      if (this.showConfirmDialog) {
+        promptAction.showDialog({
+          title: '游戏暂停',
+          message: '是否继续游戏？',
+          buttons: [
+            { text: '确定', color: '#007AFF'},
+            { text: '退出', color: '#999' }
+          ]
+        }).then((result) => {
+          if (result.index === 0) { // 点击确定
+            this.textTimerController.start();
+            this.bgImage = 'img/play.png';
+          }
+          if (result.index === 1) { // 点击取消
+            this.context.terminateSelf();
+          }
+        });
+      }
+    }
+    if (this.timerStatus === 'start') {
+      this.textTimerController.start();
+    }
+    else if (this.timerStatus === 'pause'){
+      this.textTimerController.pause();
+    }
+  }
+
   build() {
     Column(){
-        Text('数独大师')
-          .fontSize(30)
-          .height('15%')
-          .width('100%')
-          .padding({top:50})
-          .textAlign(TextAlign.Center)
-          .backgroundColor('#FFcccccc')
+      Text('数独大师')
+        .fontSize(30)
+        .height('15%')
+        .width('100%')
+        .padding({top:50})
+        .textAlign(TextAlign.Center)
+        .backgroundColor('#FFcccccc')
+
+
+      // 横向布局
+      Row({ space: 20 }) { // 设置按钮间距为20vp
+        Image(this.bgImage)
+          .width(40)
+          .height(40)
+          .borderRadius(20)
+          .onClick(()=>{
+            this.showConfirmDialog = true; // 点击后显示弹窗
+            this.timerStatus = 'pause';
+            this.textTimerController.pause();
+            this.bgImage = 'img/stop.png';
+            // Dialog弹窗
+            if (this.showConfirmDialog) {
+              promptAction.showDialog({
+                title: '游戏暂停',
+                message: '是否继续游戏？',
+                buttons: [
+                  { text: '确定', color: '#007AFF'},
+                  { text: '退出', color: '#999' }
+                ]
+              }).then((result) => {
+                if (result.index === 0) { // 点击确定
+                  this.textTimerController.start();
+                  this.bgImage = 'img/play.png';
+                }
+                if (result.index === 1) { // 点击取消
+                  this.context.terminateSelf();
+                }
+              });
+            }
+          })
+
+        Image('img/message.png')
+          .width(40)
+          .height(40)
+          .borderRadius(20)
+
+        TextTimer({
+          controller: this.textTimerController,
+        })
+          .format('mm:ss')
+          .fontSize(20)
+          .fontColor(Color.Black)
+
+        Image('img/reset.png')
+          .width(40)
+          .height(40)
+          .borderRadius(20)
+
+        Image('img/hint.png')
+          .width(40)
+          .height(40)
+          .borderRadius(20)
+      }
+      .width('100%')
+      .margin({top:40})
+      .justifyContent(FlexAlign.Center) // 水平居中对齐
 
       Grid() {
         ForEach(this.gridData, (item: number, index: number) => {
@@ -84,7 +210,7 @@ struct Index {
       .columnsGap(0)  // 列间距
       .rowsGap(0)     // 行间距
       .width('90%')   // 控制整体宽度
-      .margin({top:80})
+      .margin({top:40})
       .aspectRatio(1) // 强制1:1宽高比（正方形网格）
       .border({
         width:2,
