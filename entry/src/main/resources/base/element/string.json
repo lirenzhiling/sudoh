@@ -13,19 +13,51 @@
       "value": "label"
     },
     {
-      "name": "MainAbility_desc",
-      "value": "description"
-    },
-    {
-      "name": "MainAbility_label",
-      "value": "label"
-    },
-    {
       "name": "HomeAbility_desc",
       "value": "description"
     },
     {
       "name": "HomeAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "Levelability_desc",
+      "value": "description"
+    },
+    {
+      "name": "Levelability_label",
+      "value": "label"
+    },
+    {
+      "name": "MyServiceAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "MyServiceAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "Login_desc",
+      "value": "description"
+    },
+    {
+      "name": "Login_label",
+      "value": "label"
+    },
+    {
+      "name": "LoginAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "LoginAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "RegisterAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "RegisterAbility_label",
       "value": "label"
     }
   ]

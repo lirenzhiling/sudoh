@@ -4,8 +4,9 @@ import { window } from '@kit.ArkUI';
 
 const DOMAIN = 0x0000;
 
-export default class HomeAbility extends UIAbility {
+export default class RegisterAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
   }
 
   onDestroy(): void {
@@ -16,7 +17,7 @@ export default class HomeAbility extends UIAbility {
     // Main window is created, set main page for this ability
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
-    windowStage.loadContent('pages/Home', (err) => {
+    windowStage.loadContent('pages/Register', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;

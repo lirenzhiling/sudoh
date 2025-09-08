@@ -10,6 +10,16 @@
       "2in1",
       "wearable"
     ],
+//    "requestPermissions": [
+//      {
+//        "name": "ohos.permission.READ_USER_STORAGE",
+//        "reason": "用于读取数据库文件"
+//      },
+//      {
+//        "name": "ohos.permission.WRITE_USER_STORAGE",
+//        "reason": "用于写入数据库文件"
+//      }
+//    ]
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
@@ -23,10 +33,16 @@
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
-        "skills": [{
-          "entities": ["entity.system.home"],
-          "actions": ["action.system.home"]
-        }]
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
       },
       {
         "name": "EntryAbility",
@@ -36,8 +52,34 @@
         "label": "$string:EntryAbility_label",
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
-
       },
+      {
+        "name": "LevelAbility",
+        "srcEntry": "./ets/Levelability/LevelAbility.ets",
+        "description": "$string:Levelability_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:Levelability_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background"
+      },
+      {
+        "name": "LoginAbility",
+        "srcEntry": "./ets/loginability/LoginAbility.ets",
+        "description": "$string:LoginAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:LoginAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background"
+      },
+      {
+        "name": "RegisterAbility",
+        "srcEntry": "./ets/registerability/RegisterAbility.ets",
+        "description": "$string:RegisterAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:RegisterAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background"
+      }
     ],
     "extensionAbilities": [
       {
@@ -51,7 +93,7 @@
             "resource": "$profile:backup_config"
           }
         ],
-      }
+      },
     ]
   }
 }

@@ -49,11 +49,40 @@ struct Sudoku {
   // 声明计时器控制器
   textTimerController: TextTimerController = new TextTimerController();
 
+  // 新增Service启动方法
+  // private startService() {
+  //   let want: Want = {
+  //     deviceId: "", // 空字符串表示本设备
+  //     bundleName: "com.example.myapplication", // 当前应用包名
+  //     abilityName: "MyServiceAbility", // 目标Ability名称
+  //     moduleName: "entry",
+  //     parameters: { // 可选参数传递
+  //       taskType: "sync"
+  //     }
+  //   };
+  //   this.context.startAbility(want);
+  //   promptAction.showDialog({
+  //     title: '游戏暂停',
+  //     message: '是否继续游戏？',
+  //     buttons: [
+  //       { text: '确定', color: '#007AFF'},
+  //       { text: '退出', color: '#999' }
+  //     ]
+  //   })
+  // }
+
   //暂停与继续
   @State bgImage: string = 'img/play.png';
 
   // 接收端
   @StorageLink('timerStatus') timerStatus: string = '';
+  @StorageLink('mylevel') mylevel: number[] = [];
+  @State mylevelinit: number[] = [];
+
+  aboutToAppear() {
+    this.mylevelinit = [...this.mylevel]; // 或 JSON.parse(JSON.stringify(this.mylevel))
+  }
+
   @State showConfirmDialog: boolean = false; // 控制弹窗显隐
 
 
@@ -65,6 +94,7 @@ struct Sudoku {
   //   }
   // }
 
+
   onPageShow() {
     // 从全局状态获取计时器状态
     // this.isTimerRunning = globalThis.timerStatus?.isRunning ?? false;
@@ -75,6 +105,9 @@ struct Sudoku {
     // }
 
     const shouldShow: boolean = AppStorage.get<boolean>('shouldShowDialog') || false; // 默认false
+    PersistentStorage.persistProp('shouldShowDialog', false);
+
+    // this.context.eventHub.emit('updateTimer', 1000);
     if (shouldShow) {
       this.showConfirmDialog = true; // 点击后显示弹窗
       this.timerStatus = 'pause';
@@ -96,6 +129,8 @@ struct Sudoku {
           }
           if (result.index === 1) { // 点击取消
             this.context.terminateSelf();
+            this.showConfirmDialog=false;
+            PersistentStorage.persistProp('shouldShowDialog', false);
           }
         });
       }
@@ -146,6 +181,8 @@ struct Sudoku {
                 }
                 if (result.index === 1) { // 点击取消
                   this.context.terminateSelf();
+                  this.showConfirmDialog=false;
+                  PersistentStorage.persistProp('shouldShowDialog', false);
                 }
               });
             }
@@ -155,6 +192,9 @@ struct Sudoku {
           .width(40)
           .height(40)
           .borderRadius(20)
+          .onClick(()=> {
+            // this.startService();
+          })
 
         TextTimer({
           controller: this.textTimerController,
@@ -178,7 +218,7 @@ struct Sudoku {
       .justifyContent(FlexAlign.Center) // 水平居中对齐
 
       Grid() {
-        ForEach(this.gridData, (item: number, index: number) => {
+        ForEach(this.mylevel, (item: number, index: number) => {
           GridItem() {
             Text(this.getBlockText(item,index))
               .fontSize(16)
@@ -187,10 +227,10 @@ struct Sudoku {
           }
           .backgroundColor(this.getBlockColor(index))
           .onClick(() => {
-            if (this.gridDataone[index] === 0) { // 仅当item非0时响应点击
+            if (this.mylevelinit[index] === 0) { // 仅当item非0时响应点击
               this.selectedNumber=item;
               this.selectedIndex = index; // 更新选中索引
-              this.gridData[this.selectedIndex]=this.selectedNumber;
+              this.mylevel[this.selectedIndex]=this.selectedNumber;
             }
           })
           .border({
@@ -228,7 +268,7 @@ struct Sudoku {
               .fontColor("#FFFFFFFF")
               .onClick(() => {
                   this.selectedNumber = item; // 更新选中数值
-                  this.gridData[this.selectedIndex]=this.selectedNumber;
+                  this.mylevel[this.selectedIndex]=this.selectedNumber;
                 })
           }
         })
@@ -241,6 +281,9 @@ struct Sudoku {
             .fontSize(20)
             .backgroundColor("#FFbbbbbb")
             .fontColor("#FFFFFFFF")
+            .onClick(() => {
+              console.log('mylevel：'+this.mylevel[2]+'mylevelinit'+this.mylevelinit[2])
+            })
         }
         .columnStart(0)  // 从第1列开始
         .columnEnd(2)    // 跨到第3列（索引从0开始）
@@ -285,7 +328,7 @@ struct Sudoku {
     }
   }
   getBlockTextColor(index:number):string{
-    if (this.gridDataone[index]===0) {
+    if (this.mylevelinit[index]===0) {
       return "#FF6666ff"
     }else {
       return "#FF000000"

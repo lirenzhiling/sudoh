@@ -1,6 +1,10 @@
 {
   "src": [
     "pages/Home",
-    "pages/Sudoku"
+    "pages/Sudoku",
+    "pages/Level",
+    "pages/Login",
+    "pages/Register"
+
   ]
 }
