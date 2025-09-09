@@ -1,3 +1,4 @@
+import { router } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import promptAction from '@ohos.promptAction';
@@ -282,7 +283,27 @@ struct Sudoku {
             .backgroundColor("#FFbbbbbb")
             .fontColor("#FFFFFFFF")
             .onClick(() => {
-              console.log('mylevel：'+this.mylevel[2]+'mylevelinit'+this.mylevelinit[2])
+              if (this.checkWin()) {
+                // 通关成功
+                this.textTimerController.pause(); // 停止计时器
+                promptAction.showDialog({
+                  title: '恭喜通关',
+                  buttons: [
+                    { text: '确定', color: '#007AFF'},
+                    { text: '退出', color: '#999' }
+                  ]
+                });
+                router.pushUrl({ url: 'pages/Home' });
+              } else {
+                // 未通关
+                promptAction.showDialog({
+                  title: '答案不正确，请继续努力',
+                  buttons: [
+                    { text: '确定', color: '#007AFF'},
+                    { text: '取消', color: '#999' }
+                  ]
+                });
+              }
             })
         }
         .columnStart(0)  // 从第1列开始
@@ -302,6 +323,86 @@ struct Sudoku {
     .height("100%")
     .pageStyle()
     // .backgroundColor('#FFaaFFFF')
+  }
+
+  private checkWin(): boolean {
+    // 检查所有单元格是否已填满
+    for (let i = 0; i < 81; i++) {
+      if (this.mylevel[i] === 0 || this.mylevel[i] === -1) {
+        return false; // 存在未填写的单元格
+      }
+    }
+
+    // 检查所有行是否符合数独规则
+    for (let row = 0; row < 9; row++) {
+      if (!this.checkRow(row)) {
+        return false;
+      }
+    }
+
+    // 检查所有列是否符合数独规则
+    for (let col = 0; col < 9; col++) {
+      if (!this.checkColumn(col)) {
+        return false;
+      }
+    }
+
+    // 检查所有九宫格是否符合数独规则
+    for (let boxRow = 0; boxRow < 3; boxRow++) {
+      for (let boxCol = 0; boxCol < 3; boxCol++) {
+        if (!this.checkBox(boxRow, boxCol)) {
+          return false;
+        }
+      }
+    }
+
+    return true; // 所有检查都通过
+  }
+
+  // 检查单行是否符合规则
+  private checkRow(row: number): boolean {
+    let seen = new Set<number>();
+    for (let col = 0; col < 9; col++) {
+      const index = row * 9 + col;
+      const value = this.mylevel[index];
+      if (value !== 0 && seen.has(value)) {
+        return false; // 发现重复数字
+      }
+      seen.add(value);
+    }
+    return true;
+  }
+
+  // 检查单列是否符合规则
+  private checkColumn(col: number): boolean {
+    let seen = new Set<number>();
+    for (let row = 0; row < 9; row++) {
+      const index = row * 9 + col;
+      const value = this.mylevel[index];
+      if (value !== 0 && seen.has(value)) {
+        return false; // 发现重复数字
+      }
+      seen.add(value);
+    }
+    return true;
+  }
+
+  // 检查九宫格是否符合规则
+  private checkBox(boxRow: number, boxCol: number): boolean {
+    let seen = new Set<number>();
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const row = boxRow * 3 + r;
+        const col = boxCol * 3 + c;
+        const index = row * 9 + col;
+        const value = this.mylevel[index];
+        if (value !== 0 && seen.has(value)) {
+          return false; // 发现重复数字
+        }
+        seen.add(value);
+      }
+    }
+    return true;
   }
 
   getBlockText(item: number,index:number): string {
