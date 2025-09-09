@@ -94,7 +94,7 @@ struct Home {
                 title: '是否退出登录',
                 buttons: [
                   { text: '确定', color: '#007AFF'},
-                  { text: '退出', color: '#999' }
+                  { text: '取消', color: '#999' }
                 ]
               }).then((result) => {
                 if (result.index === 0) { // 点击确定
