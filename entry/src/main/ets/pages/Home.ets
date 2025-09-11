@@ -22,26 +22,54 @@ struct Home {
   @StorageProp('username') username: string = '';
   @StorageLink('isLoggedIn') setLoggedIn: boolean = this.isLoggedIn;
 
-  @State isMusicPlaying: boolean = false;
+  @State isMusicPlaying: boolean = true;
 
   private avPlayer: media.AVPlayer | null = null;
   private context = getContext(this) as common.UIAbilityContext;
   aboutToAppear() {
     // 这里应该从持久化存储中检查实际的登录状态
     this.username = this.isLoggedIn ? this.username : '未登录';
-
     this.initAVPlayer();
   }
 
-  // 初始化AVPlayer并设置回调
   async initAVPlayer() {
     try {
-      // 1. 创建AVPlayer实例
       this.avPlayer = await media.createAVPlayer();
-      // 2. 设置回调监听
-      // this.setAVPlayerCallback();
-      // 3. 设置播放源
-      await this.setSource();
+
+      // 添加状态监听
+      this.avPlayer.on('stateChange', (state) => {
+        console.log(`Current state: ${state}`);
+        if (this.avPlayer){
+          switch (state) {
+            case 'initialized': // 设置播放源成功后进入此状态
+              console.info('state initialized called');
+              // 确保在initialized状态下调用prepare
+              this.avPlayer.prepare((err) => {
+                if (err) {
+                  console.error(`准备失败: ${JSON.stringify(err)}`);
+                } else {
+                  console.log('准备成功，等待播放');
+                }
+              });
+              break;
+            case 'prepared': // 准备就绪
+              this.avPlayer.play(); // 在准备完成后自动播放
+              console.log('准备好了')
+              break;
+            case 'playing': // 开始播放
+              console.log('播放开始了！');
+              break;
+            case 'completed': // 播放完成
+              console.log('播放完成');
+              break;
+            case 'error': // 进入错误状态
+              console.error('播放器发生错误');
+              break;
+          }
+        }
+      });
+      await this.setSource(); // 设置源，触发初始化
+      // 移除了这里的 this.avPlayer.play()，因为将在 'prepared' 状态触发播放
     } catch (error) {
       console.error(`初始化播放器失败: ${JSON.stringify(error)}`);
     }
@@ -52,20 +80,43 @@ struct Home {
     if (!this.avPlayer) return;
 
     try {
-      // 关键：获取rawfile目录下音乐文件的文件描述符
       let fileDescriptor = await this.context.resourceManager.getRawFd('music.mp3');
-      // 解构获取需要的字段
       let avFileDescriptor: media.AVFileDescriptor = {
         fd: fileDescriptor.fd,
         offset: fileDescriptor.offset,
         length: fileDescriptor.length
       };
-      // 设置为播放源
       this.avPlayer.fdSrc = avFileDescriptor;
+
+      // 调用 prepare()，播放器将开始缓冲并进入 prepared 状态
+      this.avPlayer.prepare((err) => {
+        if (err) {
+          console.error(`准备失败: ${JSON.stringify(err)}`);
+        } else {
+          console.log('准备成功，等待播放');
+        }
+      });
     } catch (error) {
       console.error(`设置播放源失败: ${JSON.stringify(error)}`);
     }
   }
+
+  onPageHide(): void {
+    if (this.avPlayer) {
+      this.avPlayer.release(); // 释放AVPlayer占用的资源[1](@ref)
+      this.avPlayer = null; // 将引用设为null
+      console.log('AVPlayer资源已在页面隐藏时释放并置null');
+    }
+  }
+
+  aboutToDisappear() {
+    if (this.avPlayer) {
+      this.avPlayer.release();
+      this.avPlayer = null;
+    }
+  }
+
+
 
   build() {
     Column() {
@@ -76,6 +127,11 @@ struct Home {
           .width(40)
           .height(40)
           .borderRadius(20) // 圆形头像
+          .border({ // 添加边框
+            width: 2, // 边框宽度
+            color: Color.Black, // 边框颜色，可以使用Color预定义颜色，或使用$r('app.color.your_color')引用资源
+            style: BorderStyle.Solid // 边框样式，默认为Solid（实线），还可选Dotted（点线）或Dashed（虚线）
+          })
           .objectFit(ImageFit.Contain) // 关键修改：确保图片完整显示在容器内[3](@ref)
           .backgroundColor('#f0f0f0') // 可选项：如果图片有透明区域或非方形，设置背景色
           .margin({ right: 10 })
@@ -147,6 +203,9 @@ struct Home {
         .margin({ left: 10,right:15 }) // 添加与左边元素的间距
         .onClick(() => {
           // 点击排行榜后的操作
+          router.pushUrl({
+            url: 'pages/RankingPage'
+          });
         })
 
       }
@@ -228,6 +287,11 @@ struct Home {
           width:5
         })
         .onClick(() => {
+          if (this.isLoggedIn) {
+            router.pushUrl({ url: 'pages/User' });
+          }else {
+            router.pushUrl({ url: 'pages/Login' });
+          }
         })
     }
     .height('100%')

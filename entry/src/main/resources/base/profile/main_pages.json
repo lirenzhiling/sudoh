@@ -4,7 +4,10 @@
     "pages/Sudoku",
     "pages/Level",
     "pages/Login",
-    "pages/Register"
+    "pages/Register",
+    "pages/User",
+    "pages/RankingPage"
+
 
   ]
 }

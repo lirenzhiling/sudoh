@@ -4,6 +4,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import promptAction from '@ohos.promptAction';
 import Want from '@ohos.app.ability.Want';
 
+import { DatabaseHelper } from '../database/DatabaseHelper';
 
 
 
@@ -20,6 +21,7 @@ interface TimerEventData {
 @Component
 
 struct Sudoku {
+  private dbHelper: DatabaseHelper = DatabaseHelper.getInstance();
   private context = getContext(this) as common.UIAbilityContext;
 
   private gridDataone: number[] = [
@@ -80,8 +82,13 @@ struct Sudoku {
   @StorageLink('mylevel') mylevel: number[] = [];
   @State mylevelinit: number[] = [];
 
-  aboutToAppear() {
+  @StorageProp('isLoggedIn') isLoggedIn: boolean = false;
+  @StorageProp('username') username: string = '';
+
+  async aboutToAppear() {
     this.mylevelinit = [...this.mylevel]; // 或 JSON.parse(JSON.stringify(this.mylevel))
+    await this.dbHelper.initDatabase(this.context);
+
   }
 
   @State showConfirmDialog: boolean = false; // 控制弹窗显隐
@@ -286,6 +293,10 @@ struct Sudoku {
               if (this.checkWin()) {
                 // 通关成功
                 this.textTimerController.pause(); // 停止计时器
+                if (this.username) {
+                  this.dbHelper.incrementUserLevel(this.username); // 等待更新完成
+                  this.dbHelper.getUserLevel(this.username).then();
+                }
                 promptAction.showDialog({
                   title: '恭喜通关',
                   buttons: [
@@ -435,4 +446,6 @@ struct Sudoku {
       return "#FF000000"
     }
   }
+
+
 }
