@@ -1,20 +1,119 @@
 import { RankingItem, RankStyles } from './model/RankingItem';
 
+import relationalStore from '@ohos.data.relationalStore';
+import { DatabaseHelper } from '../database/DatabaseHelper';
+import common from '@ohos.app.ability.common';
+
+
+interface PlayerData {
+  id: number;
+  username: string;
+  level: number;
+}
+
 @Entry
 @Component
 struct RankingPage {
-  // 初始化数据（带默认样式，避免undefined）
-  private rankingData: RankingItem[] = [
-    { rank: 0, name: '玩家一', level: 25, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } },
-    { rank: 0, name: '玩家二', level: 22, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } },
-    { rank: 0, name: '玩家三', level: 18, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } },
-    { rank: 0, name: '路人甲', level: 15, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } },
-    { rank: 0, name: '路人乙', level: 12, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } },
-    { rank: 0, name: '路人丙', level: 10, styles: { rankBgColor: $r('app.color.light_gray'), itemBgColor: $r('app.color.white'), borderColor: $r('app.color.light_gray') } }
-  ];
+  private context = getContext(this) as common.UIAbilityContext;
+  private dbHelper: DatabaseHelper = DatabaseHelper.getInstance();
+  @State rankingData: RankingItem[] = []; // 用于存储排行榜数据
+
+  // 从数据库加载排行榜数据
+  async loadRankingData() {
+    try {
+      const rdbStore = this.dbHelper.getRdbStore();
+      const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('users');
+
+      // 设置排序条件：按level降序，并限制结果为3条
+      predicates.orderByDesc('level');
+      predicates.limitAs(10);
+
+      // 指定要查询的列
+      const columns: string[] = ['id', 'username', 'level'];
+
+      const resultSet = await rdbStore.query(predicates, columns);
+      const players: PlayerData[] = [];
+
+      if (resultSet && resultSet.rowCount > 0) {
+        let hasRow = resultSet.goToFirstRow();
+        while (hasRow) {
+          players.push({
+            id: resultSet.getDouble(resultSet.getColumnIndex('id')),
+            username: resultSet.getString(resultSet.getColumnIndex('username')),
+            level: resultSet.getDouble(resultSet.getColumnIndex('level'))
+          });
+          hasRow = resultSet.goToNextRow();
+        }
+      }
+
+      resultSet.close(); // 关闭结果集释放资源
+
+      // 在页面中转换为RankingItem格式
+      this.convertToRankingItems(players);
+
+    } catch (err) {
+      console.error(`获取排行榜数据失败. Code: ${err.code}, message: ${err.message}`);
+      // 如果出错，使用默认数据
+    }
+  }
+
+  // 将数据库查询结果转换为RankingItem格式
+  private convertToRankingItems(players: PlayerData[]) {
+    const newRankingData: RankingItem[] = [];
+
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+
+      // 创建符合RankStyles接口的样式对象
+      const rankStyles: RankStyles = {
+        rankBgColor: $r('app.color.light_gray'),
+        itemBgColor: $r('app.color.white'),
+        borderColor: $r('app.color.light_gray')
+      };
+
+      // 创建符合RankingItem接口的对象
+      const rankingItem: RankingItem = {
+        rank: i + 1,
+        name: player.username,
+        level: player.level,
+        styles: rankStyles
+      };
+
+      newRankingData.push(rankingItem);
+    }
+
+    // 如果数据不足3条，用默认数据填充
+    while (newRankingData.length < 3) {
+      const defaultItem: RankingItem = {
+        rank: newRankingData.length + 1,
+        name: `玩家${newRankingData.length + 1}`,
+        level: 20 - newRankingData.length * 3,
+        styles: {
+          rankBgColor: $r('app.color.light_gray'),
+          itemBgColor: $r('app.color.white'),
+          borderColor: $r('app.color.light_gray')
+        }
+      };
+      newRankingData.push(defaultItem);
+    }
+
+    this.rankingData = newRankingData;
+  }
+
+  // 初始化数据库并加载数据
+  async initAndLoadData() {
+    try {
+      // 尝试初始化数据库
+      await this.dbHelper.initDatabase(this.context);
+      await this.loadRankingData();
+    } catch (err) {
+      console.error(`初始化数据库失败. Code: ${err.code}, message: ${err.message}`);
+    }
+  }
 
   // 页面渲染前：完成数据补充、排序、样式预计算
   aboutToAppear(): void {
+    this.initAndLoadData()
     // 补充15条数据（含初始6条）
     for (let i = 7; i <= 15; i++) {
       this.rankingData.push({
